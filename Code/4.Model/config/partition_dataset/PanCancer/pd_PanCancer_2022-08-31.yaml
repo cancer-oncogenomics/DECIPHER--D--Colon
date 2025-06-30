@@ -1,0 +1,80 @@
+######################################################################################################
+# 数据集说明
+# 1. 所有没有批次信息的样本的KitDate统一为1991-01-01
+# 2. 样本截止日期为 2022-08-31
+# 3. 基于刘睿做的数据集的基础上，删除breast nodule， Benign prostatic hyperplasia，删除R007_Infect，并将Test和Valid合并
+######################################################################################################
+
+description:
+    JA1T: 西南医院/葛佳
+    KA7V: 中国医学科学院肿瘤医院/高树庚
+    KAL1: 长海医院/任善成
+    KB1C: 江苏省人民医院/陈亮
+    KB48: 中国医科大学附属第一医院/许顺
+    KB53: 长癌医院/王林辉
+    KY249: 江苏省肿瘤医院/尹荣
+    Baseline-EDTA-Streck: EDTA，Streck采血管，用于采血管矫正基线样本
+    KAS7: 广州医科大学附属第一医院/古迪
+    KB3V: 黑龙江省肿瘤医院/-
+    KBBV: 广东省人民医院/陈杰荣
+    Old_New_SOP_compare: 新老湿实验流程对比
+    Old_New_SOP_repeat: 新老湿实验流程重复性对比
+    Rep95: 肺癌旧实验流程，信灵采血管，5人，每人3个重复
+    TubeTest_NJ-BJ-GZ: 采血管优化实验：10个健康人，Streck，Bunny新旧，Bunny成分18,19,20，不同运输时间，人工磁珠提取，KAPA自动化建库
+    Y00D: 旧实验流程，大部分自动化，大部分Streck采血管
+    Y152: 旧实验流程，大部分人工，大部分EDTA采血管
+    CRC_HP_clinical_sample_test: 医疗器械临床CRC&HP样本测试，用于筛选阴阳性样本进行稀释
+    JX20: 西南医院/葛佳
+    K799: 复旦大学附属肿瘤医院/王征
+    KAT6: 广州医科大学附属第一医院/古迪
+    KB11: 上海肺科医院/陈昶
+    KB4Q: 中国医学科学院肿瘤医院/苏建忠
+    KB6A: 中国医科大学附属第一医院/许顺
+    KBF3: 上海市肺科医院/谢冬
+    KBK4: 八一医院/黄海嵘
+    KBM3: 空军军医大学附属第二医院/田丰
+    KY256: 中山大学附属肿瘤医院/王峰
+    L000: 临床VIP早期肠癌送检
+    PRJNA489753: "Agarwal R, Chan Y C, Tam C S, et al. Nature Medicine, 2019, 25(1): 119-129."
+    PRJNA554329: "Ramesh N, Sei E, Tsai P C, et al. Genome biology, 2020, 21(1): 1-22."
+    PRJNA578569: "Bujak A Z, Weng C F, Silva M J, et al. Annals of Oncology, 2019, 30: v30."
+    PRJNA627029: "https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA627029"
+    PRJNA633741: "Wei T, Zhang J, Li J, et al.Molecular oncology, 2020, 14(9): 1966-1977."
+    PlosOne: "Ma X, Zhu L, Wu X, et al. PloS one, 2017, 12(1): e0169231."
+    R007: 晚期肺癌，用于肺癌早筛文章补充验证
+    R083: 江苏省肿瘤医院/尹荣
+    Rep69: 旧实验流程稳定性测试，8人*3rep
+    KA5Q: 复旦大学附属肿瘤医院/彭俊杰
+    KY387: 科研项目，非早筛实验流程Xten测序，PCR WGS数据
+    20210730_Tube_and_Save: 采血管优化实验：EDTA/Streck/Higia/Bunny， 常温/低温/高温运输
+    Cleavage_optimize: cfDNA磁珠法提取裂解次数1次vs2次vs3次优化实验
+    INR30: 内部阴性健康人30次重复
+    J999_extract_library_parallel: 技术支持金陵队列健康人平行实验
+    KAE3: 南京鼓楼医院肺癌/王立峰
+    KAG9: 金陵队列第一年入组
+    KB8Y: 广州医科大学附属第一医院/何健行
+    KBEK: 金陵队列第二年入组
+    PRJNA795275: "Esfahani M S, Hamilton E G, Mehrmohamadi M, et al. Nature Biotechnology, 2022: 1-13."
+    Protease_optimize: 血浆提取流程更换蛋白酶K 翎圣vs瀚海 优化实验
+    R007_Stable: 新湿实验流程稳定性测试（采血，提取，建库，上机）
+    R007_save: 血浆冻存时间测试
+    R007_tube_compare: 采血管对比测试EDTA&Bunny
+    TimeComStab: 采血管优化实验： 5个健康人，EDTA，Streck，Bunny不同成分，不同空管放置时间，每个条件两个重复，人工磁珠提取，Qiagen自动化建库
+    YZ15_optimize: 磁珠提取STAR自动化测试实验（建库旧流程）：凯杰；磁珠人工；磁珠自动化批内批间
+
+today: &deadline 2022-08-31T23:59:59+08:00
+
+filter: &filter {
+      KitDate: {"$lte": *deadline}, Ignore: 0, TimePoint: {"$nin": [after-surgery]},
+      GroupLevel2: {"$nin": [MAC or SRCC]},
+      GroupLevel3: {"$nin": ["Mixed-SRC", "PIN", "Liver cirrhosis", "lung nodules", "breast nodule",
+                             "Benign prostatic hyperplasia", "Renal Hamartoma", "Complex Renal Cyst", "breast nodules"]
+      },
+    }
+
+dataset:
+  Valid:
+    filter: *filter
+    select:
+        J999_extract_library_parallel:
+          - {ProjectID: J999_extract_library_parallel}

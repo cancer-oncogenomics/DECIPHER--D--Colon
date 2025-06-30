@@ -1,0 +1,17 @@
+# 超参搜索的参数
+epochs: {value: [10, 50, 100], distribution: choice}  # 训练轮数
+batch_size: {value: [10, 50, 100, 200], distribution: choice}  # 批大小
+lambda_domain: {value: [0.0001, 1], distribution: loguniform}  # 梯度反转层的权重
+lr: {value: [0.0001, 1], distribution: loguniform}  # 学习率
+weight_decay: {value: [0.0001, 1], distribution: loguniform}  # 权重衰减
+out1: {value: [2, 64], step: 1, distribution: quniform}  # 第一个卷积层的输出通道数
+conv1: {value: [1, 4], step: 1, distribution: quniform}  # 第一个卷积层的卷积核大小
+pool1: {value: [1, 2], distribution: choice}  # 第一个池化层的池化核大小
+drop1: {value: [0.0, 0.4], distribution: uniform}  # 第一个池化层的随机失活率
+out2: {value: [64, 256], step: 1, distribution: quniform}  # 第二个卷积层的输出通道数
+conv2: {value: [1, 4], step: 1, distribution: quniform}  # 第二个卷积层的卷积核大小
+pool2: {value: [1, 2], distribution: choice}  # 第二个池化层的池化核大小
+drop2: {value: [0.0, 0.4], distribution: uniform}  # 第二个池化层的随机失活率
+fc1: {value: [64, 256], step: 1, distribution: quniform}  # 第一个全连接层的输出通道数
+fc2: {value: [32, 256], step: 1, distribution: quniform}  # 第二个全连接层的输出通道数
+drop3: {value: [0.0, 0.8], distribution: uniform}  # 第三个池化层的随机失活率

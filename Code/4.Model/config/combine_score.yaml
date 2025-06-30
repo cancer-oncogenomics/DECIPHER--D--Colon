@@ -1,0 +1,12 @@
+arg_combine_score:
+  - {name: "Train AUC", mode: auc, Dataset: [Train], weight: 1}
+  - {name: "Valid1 AUC", mode: auc, Dataset: [Valid1], weight: 2}
+  - {name: "Valid1Partial", mode: acc, Dataset: [Valid1], Optimize: [Valid1_Partial], weight: 1}
+  - {name: "Valid2 AUC", mode: auc, Dataset: [Valid2], weight: 1}
+  - {name: "Valid1Sens", mode: sensitivity, Dataset: [Valid1], weight: 2}
+  - {name: "KAG9", mode: acc, Dataset: [Valid1], Optimize: [KAG9], weight: 1}
+  - {name: "KAG9_new", mode: acc, Dataset: [Valid1], Optimize: [KAG9_new], weight: 2}
+  - {name: "TimeComStab", mode: rep, Dataset: [Valid1], Optimize: [TubeTest_new], weight: 1}
+  - {name: "TubeTest", mode: rep, Dataset: [Valid1], Optimize: [TubeTest, TubeTest_NJ-BJ-GZ], weight: 1}
+  - {name: "TrainValidKs", mode: ks, Dataset: [Train, Valid1], weight: 1}  # 没有optimize参数
+  - {name: "RepSd", mode: sd, Dataset: [Valid1], Optimize: [KAG9, Rep69, TubeTest, TubeTest_NJ-BJ-GZ, INR30, TubeTest_new], weight: 1}

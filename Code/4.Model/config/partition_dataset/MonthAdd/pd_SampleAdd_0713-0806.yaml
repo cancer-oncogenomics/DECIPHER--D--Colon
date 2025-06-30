@@ -1,0 +1,26 @@
+######################################################################################################
+# 注意事项
+# 1. 所有没有批次信息的样本的KitDate统一为1991-01-01
+######################################################################################################
+
+# 2022-07-13 到 2022-08-09增加的样本
+
+filter: &filter {
+      Ignore: 0, TimePoint: {"$nin": [after-surgery]},
+      GroupLevel2: {"$nin": [MAC or SRCC]},
+      GroupLevel3: {"$nin": ["Mixed-SRC", "PIN", "Liver cirrhosis", "lung nodules", "breast nodule",
+                             "Benign prostatic hyperplasia", "Renal Hamartoma", "Complex Renal Cyst", "breast nodules"]
+      },
+    }
+
+dataset:
+  all:
+    select:
+      all:
+       - {
+         KitDate: { "$gt": 2022-07-13T00:00:00+08:00, "$lte": 2022-08-31T00:00:00+08:00 }, Ignore: 0, TimePoint: { "$nin": [ after-surgery ] },
+         GroupLevel2: { "$nin": [ MAC or SRCC ] },
+         GroupLevel3: { "$nin": [ "Mixed-SRC", "PIN", "Liver cirrhosis", "lung nodules", "breast nodule",
+                                  "Benign prostatic hyperplasia", "Renal Hamartoma", "Complex Renal Cyst", "breast nodules" ]
+         },
+       }

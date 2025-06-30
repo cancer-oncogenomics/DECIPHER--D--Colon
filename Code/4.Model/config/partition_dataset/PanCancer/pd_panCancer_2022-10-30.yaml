@@ -1,0 +1,443 @@
+########################################################################################################################
+# 2022-10-30数据集
+########################################################################################################################
+
+# 筛选说明
+select_note:
+  KB4Q (S94U): 64拆分
+  S94U: 64拆分
+  KB4Q: 按医院64拆分，不符合条件的放入valid.
+  KBAR: 64拆分
+  KA5Q: 疾病（CRA）55拆分，其余放入train
+  KY256: 55拆分
+  K799: 健康放入Train, 癌症64拆分
+  KB8Y: 64拆分
+  KBA5: 64拆分
+  KBA6: 64拆分
+  KA7V: 去除老流程，新流程放入Train
+  KAT6: 55拆分
+  KAG9: 去除老流程，非本次入组样本55拆分，本次新入组样本加入valid
+  20220909_R007_Transport_condition_Test_rmHighTemp: 去除高温运输的20例样本后，加入Train
+  KB2Y: 55拆分
+  KBL1: 55拆分
+  20221022_R007_Transport_condition_Test2: 去除-20冻存样本5例后，加入Valid
+  R007_save: 去除-80℃冻存3月样本
+
+
+
+# 截止日期
+deadline: &deadline 2022-10-30T23:59:59+08:00
+last_deadline: &last_deadline 2022-08-30T23:59:59+08:00
+
+# 通用过滤规则
+
+filter: {
+          Ignore: 0,
+          TimePoint: { "$nin": [ after-surgery ] },
+          KitDate: {"$lte": *deadline},
+          FilterCancerType: "/dssg/home/sheny/software/own/MercuryWeb/static/demo/CancerType.xlsx"
+    }
+
+# 流程分组
+old_sop: &old_sop ['NSJB-3-NGS-TEC-83', 'NSJB-3-NGS-TEC-98', 'NSJB-3-NGS-TEC-132']
+
+# 数据集筛选规则
+dataset:
+
+  Train:
+
+    # Brain
+    JA1T:
+      - { ProjectID: "JA1T" }
+
+    # Breast
+    KB4Q (S94U):
+      - { ProjectID: "KB4Q (S94U)", ratio: [ 0, 0.6 ]  }
+
+    S94U:
+      - { ProjectID: "S94U", ratio: [ 0, 0.6 ] }
+
+    KB4Q:
+      - { ProjectID: KB4Q, HospitalID: 中国医学科学院肿瘤医院, ratio: [ 0, 0.6 ] }
+      - { ProjectID: KB4Q, HospitalID: 烟台毓璜顶医院, ratio: [ 0, 0.6 ] }
+
+    # Colorectal
+    KBAR:
+      - { ProjectID: "KBAR", ratio: [0, 0.6] }
+
+    KB3V:
+      - { ProjectID: "KB3V" }
+
+    KBBV:
+      - { ProjectID: "KBBV" }
+
+    KA5Q:
+      - { ProjectID: "KA5Q", GroupLevel3: {"$in": [Disease]}, ratio: [0, 0.5]}
+      - { ProjectID: "KA5Q", GroupLevel3: {"$nin": [Disease]}}
+
+    KY087:
+      - { ProjectID: "KY087" }
+
+    # Gastric
+    KY256:
+      - { ProjectID: "KY256", ratio: [0, 0.5] }
+
+    # Kidney
+    KB53:
+      - { ProjectID: "KB53" }
+    
+    #Liver
+    K799:
+      - { ProjectID: "K799", GroupLevel1: Healthy }
+      - { ProjectID: "K799", GroupLevel1: Cancer, ratio: [0, 0.6] }
+
+    # Lung
+    KB48:
+      - { ProjectID: "KB48" }
+    
+    KB8Y:
+      - { ProjectID: "KB8Y", ratio: [0, 0.6] }
+
+    KBA5:
+      - { ProjectID: "KBA5", ratio: [0, 0.6] }
+
+    KBA6:
+      - { ProjectID: "KBA6", ratio: [0, 0.6] }
+
+    KA7V:
+      - { ProjectID: "KA7V" }
+
+    Old_New_SOP_repeat:
+      - { ProjectID: "Old_New_SOP_repeat", ExtractSop: {"$nin": *old_sop}, LibrarySop: {"$nin": *old_sop} }
+
+    KBK4:
+      - { ProjectID: "KBK4" }
+
+    Old_New_SOP_compare:
+      - { ProjectID: "Old_New_SOP_compare", ExtractSop: {"$nin": *old_sop}, LibrarySop: {"$nin": *old_sop} }
+
+    KB1C:
+      - { ProjectID: "KB1C" }
+
+    KBEX:
+      - { ProjectID: "KBEX" }
+
+    KAL1:
+      - { ProjectID: "KAL1" }
+
+    KAT6:
+      - { ProjectID: "KAT6", ratio: [0, 0.5]}
+
+    # Healthy
+    YZ15_optimize:
+      - { ProjectID: "YZ15_optimize" }
+
+    KAG9:
+      - { ProjectID: "KAG9", ExtractSop: {"$nin": *old_sop}, LibrarySop: {"$nin": *old_sop},
+          KitDate: {"$lte": *last_deadline}, ratio: [0, 0.5] }
+
+    KAS7:
+      - { ProjectID: "KAS7" }
+
+    J999_extract_library_parallel:
+      - { ProjectID: "J999_extract_library_parallel" }
+
+    20220909_R007_Transport_condition_Test_rmHighTemp:
+      - { ProjectID: "20220909_R007_Transport_condition_Test",
+          SampleID: { "$nin": [
+            'PB228V0369-K1CHH21RNF1-R007', 'PB228V0360-K1CHH21RNF1-R007', 'PB228V0342-K1CHH2DXNF1-R007',
+            'PB228V0374-K1CHH21RNF1-R007', 'PB228V0365-K1CHH21RNF1-R007', 'PB228V0387-K1CHH20XNF1-R007',
+            'PB228V0378-K1CHH21RNF1-R007', 'PB228V0329-K1CHH2DXNF1-R007', 'PB228V0338-K1CHH2DXNF1-R007',
+            'PB228V0356-K1CHH21RNF1-R007', 'PB228V0320-K1CHH21RNF1-R007', 'PB228V0306-K1CHH21RNF1-R007',
+            'PB228V0311-K1CHH21RNF1-R007', 'PB228V0347-K1CHH2DXNF1-R007', 'PB228V0302-K1CHH21RNF1-R007',
+            'PB228V0351-K1CHH2DXNF1-R007', 'PB228V0383-K1CHH20XNF1-R007', 'PB228V0324-K1CHH21RNF1-R007',
+            'PB228V0333-K1CHH2DXNF1-R007', 'PB228V0315-K1CHH21RNF1-R007'
+          ] }
+      }
+
+    KB2Y:
+      - { ProjectID: "KB2Y", ratio: [0, 0.5] }
+
+    KBL1:
+      - { ProjectID: "KBL1", ratio: [0, 0.6] }
+
+    20220901_Q008_KAG9_SOP_compare:
+      - { ProjectID: "20220901_Q008_KAG9_SOP_compare" }
+
+
+  Valid:
+    # Brain
+    JX20:
+      - { ProjectID: "JX20" }
+
+    # Breast
+    KB4Q:
+      - { ProjectID: KB4Q, HospitalID: 中国医学科学院肿瘤医院, ratio: [ 0.6, 1 ] }
+      - { ProjectID: KB4Q, HospitalID: 烟台毓璜顶医院, ratio: [ 0.6, 1 ] }
+      # - { ProjectID: KB4Q, HospitalID: {"$nin": [中国医学科学院肿瘤医院, 烟台毓璜顶医院]} }
+
+    PRJNA578569:
+      - { ProjectID: "PRJNA578569" }
+
+    S94U:
+      - { ProjectID: "S94U", ratio: [ 0.6, 1 ] }
+
+    KB4Q (S94U):
+      - { ProjectID: "KB4Q (S94U)", ratio: [ 0.6, 1 ] }
+
+    PRJNA627029:
+      - { ProjectID: "PRJNA627029" }
+
+    # Colorectal
+    KM97(KY400):
+      - { ProjectID: "KM97(KY400)" }
+
+    L000:
+      - { ProjectID: "L000" }
+
+    KBAR:
+      - { ProjectID: "KBAR", ratio: [ 0.6, 1 ] }
+
+    KA5Q:
+      - { ProjectID: "KA5Q", GroupLevel3: {"$in": [Disease]}, ratio: [0.5, 1]}
+
+    CRC_HP_clinical_sample_test:
+      - { ProjectID: "CRC_HP_clinical_sample_test" }
+
+    # Gastric
+    PlosOne:
+      - { ProjectID: "PlosOne" }
+
+    KY256:
+      - { ProjectID: "KY256", ratio: [0.5, 1] }
+
+    # Healthy
+    R007_Stable:
+      - { ProjectID: "R007_Stable" }
+
+    R007_diet_and_exercise:
+      - { ProjectID: "R007_diet_and_exercise" }
+
+    KBEK:
+      - { ProjectID: "KBEK" }
+
+    20221022_R007_Transport_condition_Test2:
+      - { ProjectID: "20221022_R007_Transport_condition_Test2",
+          SampleID: { "$nin": [
+            'PB22000317-J1CHH24XNF1-R007Y00D', 'PB22000353-J1CHH24XNF1-R007Y00D', 'PB22000365-J1CHH24XNF1-R007Y00D',
+            'PB22000449-J1CHH24XNF1-R007Y00D', 'PB22000485-J1CHH24XNF1-R007Y00D'
+          ] }
+      }
+
+    KBL1:
+      - { ProjectID: "KBL1", ratio: [0.6, 1] }
+
+    R007_tube_compare:
+      - { ProjectID: "R007_tube_compare" }
+
+    KB2Y:
+      - { ProjectID: "KB2Y", ratio: [0.5, 1] }
+
+    KAG9:
+      - { ProjectID: "KAG9", ExtractSop: { "$nin": *old_sop }, LibrarySop: { "$nin": *old_sop },
+          KitDate: { "$lte": *last_deadline }, ratio: [ 0.5, 1 ] }
+
+      - { ProjectID: "KAG9", ExtractSop: { "$nin": *old_sop }, LibrarySop: { "$nin": *old_sop },
+          KitDate: { "$gt": *last_deadline, "$lte": *deadline } }
+
+    R007_save:
+      - { ProjectID: "R007_save", SampleID: {"$nin": [
+        "PB226G0273-J1CHH21RNF5-R007P105Y00D", "PB226G0272-J1CHH2DXNF5-R007P105Y00D", "PB226G0271-J1CHH21RNF5-R007P105Y00D",
+        "PB226G0270-J1CHH21RNF5-R007P105Y00D", "PB226G0265-J1CHH21RNF5-R007P105Y00D", "PB226G0264-J1CHH21RNF5-R007P105Y00D",
+        "PB226G0263-J1CHH21RNF5-R007P105Y00D", "PB226G0262-J1CHH21RNF5-R007P105Y00D", "PB226G0261-J1CHH21RNF5-R007P105Y00D",
+        "PB226G0260-J1CHH21RNF5-R007P105Y00D", "PB226G0259-J1CHH21RNF5-R007P105Y00D", "PB226G0258-J1CHH2DXNF5-R007P105Y00D",
+        "PB226G0257-J1CHH21RNF5-R007P105Y00D", "PB226G0256-J1CHH21RNF5-R007P105Y00D", "PB226G0255-J1CHH21RNF5-R007P105Y00D",
+        "PB226G0254-J1CHH2DXNF5-R007P105Y00D", "PB226G0253-J1CHH21RNF5-R007P105Y00D", "PB226G0252-J1CHH2DXNF5-R007P105Y00D",
+        "PB226G0251-J1CHH21RNF5-R007P105Y00D", "PB226G0250-J1CHH2DXNF5-R007P105Y00D", "PB226G0245-J1CHH21RNF5-R007P105Y00D",
+        "PB226G0244-J1CHH21RNF5-R007P105Y00D", "PB226G0243-J1CHH21RNF5-R007P105Y00D", "PB226G0242-J1CHH21RNF5-R007P105Y00D",
+        "PB226G0241-J1CHH2DXNF5-R007P105Y00D", "PB226G0240-J1CHH21RNF5-R007P105Y00D", "PB226G0239-J1CHH21RNF5-R007P105Y00D",
+        "PB226G0238-J1CHH21RNF5-R007P105Y00D", "PB226G0237-J1CHH21RNF5-R007P105Y00D", "PB226G0236-J1CHH21RNF5-R007P105Y00D",
+        "PB226G0235-J1CHH21RNF5-R007P105Y00D", "PB226G0234-J1CHH21RNF5-R007P105Y00D", "PB226G0249-J1CHH21RNF5-R007P105Y00D",
+        "PB226G0248-J1CHH2DXNF5-R007P105Y00D", "PB226G0247-J1CHH21RNF5-R007P105Y00D", "PB226G0246-J1CHH2DXNF5-R007P105Y00D",
+        "PB226G0269-J1CHH21RNF5-R007P105Y00D", "PB226G0268-J1CHH21RNF5-R007P105Y00D", "PB226G0267-J1CHH2DXNF5-R007P105Y00D",
+        "PB226G0266-J1CHH21RNF5-R007P105Y00D",
+      ]} }
+
+    # Liver
+    K799:
+      - { ProjectID: "K799", GroupLevel1: Cancer, ratio: [0.6, 1] }
+
+    # Lung
+    KBA6:
+      - { ProjectID: "KBA6", ratio: [0.6, 1] }
+
+    KB8Y:
+      - { ProjectID: "KB8Y", ratio: [0.6, 1] }
+
+    KBA5:
+      - { ProjectID: "KBA5", ratio: [0.6, 1] }
+
+    KBM3:
+      - { ProjectID: "KBM3" }
+
+    KBF3:
+      - { ProjectID: "KBF3" }
+
+    KB6A:
+      - { ProjectID: "KB6A" }
+
+    # Pancreatic
+    PRJNA633741:
+      - { ProjectID: "PRJNA633741" }
+
+    # Prostate
+    PRJNA554329:
+      - { ProjectID: "PRJNA554329" }
+
+    KAT6:
+      - { ProjectID: "KAT6", ratio: [0.5, 1] }
+
+
+# 数据集过滤规则
+exclude:
+
+  # 正式项目
+#  KA7V:
+#    - { ProjectID: KA7V, LibrarySop: { "$in": *old_sop } }
+#    - { ProjectID: KA7V, ExtractSop: { "$in": *old_sop } }
+
+  KAE3:
+    - { ProjectID: KAE3, LibrarySop: { "$in": *old_sop } }
+    - { ProjectID: KAE3, ExtractSop: { "$in": *old_sop } }
+
+  KAG9:
+    - { ProjectID: KAG9, LibrarySop: { "$in": *old_sop } }
+    - { ProjectID: KAG9, ExtractSop: { "$in": *old_sop } }
+
+  KB11:
+    - { ProjectID: KB11, LibrarySop: { "$in": *old_sop } }
+    - { ProjectID: KB11, ExtractSop: { "$in": *old_sop } }
+
+  KY249:
+    - { ProjectID: KY249, LibrarySop: { "$in": *old_sop } }
+    - { ProjectID: KY249, ExtractSop: { "$in": *old_sop } }
+
+  R007:
+    - { ProjectID: R007, LibrarySop: { "$in": *old_sop } }
+    - { ProjectID: R007, ExtractSop: { "$in": *old_sop } }
+
+  R083:
+    - { ProjectID: R083, LibrarySop: { "$in": *old_sop } }
+    - { ProjectID: R083, ExtractSop: { "$in": *old_sop } }
+
+  Y00D:
+    - { ProjectID: Y00D, LibrarySop: { "$in": *old_sop } }
+    - { ProjectID: Y00D, ExtractSop: { "$in": *old_sop } }
+
+  Y152:
+    - { ProjectID: Y152, LibrarySop: { "$in": *old_sop } }
+    - { ProjectID: Y152, ExtractSop: { "$in": *old_sop } }
+
+  Old_New_SOP_compare:
+    - { ProjectID: Old_New_SOP_compare, LibrarySop: { "$in": *old_sop } }
+    - { ProjectID: Old_New_SOP_compare, ExtractSop: { "$in": *old_sop } }
+
+  Old_New_SOP_repeat:
+    - { ProjectID: Old_New_SOP_repeat, LibrarySop: { "$in": *old_sop } }
+    - { ProjectID: Old_New_SOP_repeat, ExtractSop: { "$in": *old_sop } }
+
+  # 优化项目
+  exclude_optimize:
+    - { ProjectID: Baseline-EDTA-Streck }
+    - { ProjectID: INR30 }
+    - { ProjectID: Rep69 }
+    - { ProjectID: Rep95 }
+    - { ProjectID: TimeComStab }
+    - { ProjectID: 20201018_KAPA_library_half-system }
+    - { ProjectID: 20210106_AutoLibrary_Dye }
+    - { ProjectID: 20210120_auto_vs_manual }
+    - { ProjectID: 20210210_input_library_system }
+    - { ProjectID: 20210302_library_optimize }
+    - { ProjectID: 20210305_input_library_adaptor_beads }
+    - { ProjectID: 20210401_library_system_repeat }
+    - { ProjectID: 20210402_Beads }
+    - { ProjectID: 202104_Library_Test_600samples }
+    - { ProjectID: 202106_Store_TimeAndTemperature }
+    - { ProjectID: 20210711_optimize }
+    - { ProjectID: 20210726_Agentia_Centrifuge_YZ20 }
+    - { ProjectID: 20210730_Tube_and_Save }
+    - { ProjectID: 20210903_Streck_vs_GSTube }
+    - { ProjectID: 20211114_Y043_Auto_vs_Manual }
+    - { ProjectID: 20211119_InHospital_vs_Local }
+    - { ProjectID: 20211119_YZ15_Extract_4Brand_Tubes }
+    - { ProjectID: 20220222_Tube_Beads }
+    - { ProjectID: 20220310_Tube_and_TransTime_R100 }
+    - { ProjectID: 20220527_autoExtract_Volume_Test }
+    - { ProjectID: 20220602_Library_Adaptor }
+    - { ProjectID: 20220603_Transport_Time_R100 }
+    - { ProjectID: 20220610_Library_Test_Y00K }
+    - { ProjectID: 20220707_Q008_Raw_Material_Select }
+    - { ProjectID: 20220711_NA19240_TE }
+    - { ProjectID: 20220711_NA19241_TE }
+    - { ProjectID: 20220711_NA19242_TE }
+    - { ProjectID: 20220711_NA19243_TE }
+    - { ProjectID: 20220711_NA19244_TE }
+    - { ProjectID: 20220711_NA19245_TE }
+    - { ProjectID: 20220711_NA19246_TE }
+    - { ProjectID: 20220711_NA19247_TE }
+    - { ProjectID: 20220711_NA19248_TE }
+    - { ProjectID: 20220711_NA19249_TE }
+    - { ProjectID: 20220722_Tube_TransportDay }
+    - { ProjectID: 20220815_0818_library_kit_test_Q008 }
+    - { ProjectID: 20220819_CRC_cellline_test }
+    - { ProjectID: 20220825_preserve_tube_test }
+    # - { ProjectID: 20220901_Q008_KAG9_SOP_compare }
+    - { ProjectID: 20220905_CRC_cellline_test }
+    - { ProjectID: 20220905_Q008_Vazyme_batch_stable }
+    - { ProjectID: 20220913_CRC_cellline_test }
+    - { ProjectID: 20220915_preserve_tube_test }
+    - { ProjectID: 20220925_CRC_cellline_test }
+    # - { ProjectID: 20221031_K000_Beads_compare }
+    # - { ProjectID: 20221101_R100_preserve_tube_test }
+    - { ProjectID: Baseline-EDTA-Streck }
+    - { ProjectID: CRC_cellline_dilution }
+    - { ProjectID: CRC_patient_dilution }
+    - { ProjectID: Cleavage313 }
+    - { ProjectID: Cleavage419 }
+    - { ProjectID: INR30 }
+    - { ProjectID: KY387 }
+    - { ProjectID: MGI2000_test }
+    - { ProjectID: MGI2000_test2 }
+    - { ProjectID: PRJNA489753 }
+    - { ProjectID: PRJNA795275 }
+    - { ProjectID: Protease312 }
+    - { ProjectID: Protease421 }
+    - { ProjectID: R007_Infect }
+    - { ProjectID: Rep69 }
+    - { ProjectID: Rep95 }
+    - { ProjectID: TimeComStab }
+    - { ProjectID: TubeTest_NJ-BJ-GZ }
+    - { ProjectID: YZ25 }
+    - { ProjectID: cell_lines_test }
+    - { ProjectID: 20220825_CRC_cellline_test }
+    - { ProjectID: KB49 }
+    - { ProjectID: MGI_T7_test }
+    - { ProjectID: "20221022_R007_Transport_condition_Test2",
+        SampleID: { "$in": [
+            'PB22000317-J1CHH24XNF1-R007Y00D', 'PB22000353-J1CHH24XNF1-R007Y00D', 'PB22000365-J1CHH24XNF1-R007Y00D',
+            'PB22000449-J1CHH24XNF1-R007Y00D', 'PB22000485-J1CHH24XNF1-R007Y00D'
+        ]}
+    }
+    - { ProjectID: 20220909_R007_Transport_condition_Test,
+        SampleID: { "$in": [
+          'PB228V0369-K1CHH21RNF1-R007', 'PB228V0360-K1CHH21RNF1-R007', 'PB228V0342-K1CHH2DXNF1-R007',
+          'PB228V0374-K1CHH21RNF1-R007', 'PB228V0365-K1CHH21RNF1-R007', 'PB228V0387-K1CHH20XNF1-R007',
+          'PB228V0378-K1CHH21RNF1-R007', 'PB228V0329-K1CHH2DXNF1-R007', 'PB228V0338-K1CHH2DXNF1-R007',
+          'PB228V0356-K1CHH21RNF1-R007', 'PB228V0320-K1CHH21RNF1-R007', 'PB228V0306-K1CHH21RNF1-R007',
+          'PB228V0311-K1CHH21RNF1-R007', 'PB228V0347-K1CHH2DXNF1-R007', 'PB228V0302-K1CHH21RNF1-R007',
+          'PB228V0351-K1CHH2DXNF1-R007', 'PB228V0383-K1CHH20XNF1-R007', 'PB228V0324-K1CHH21RNF1-R007',
+          'PB228V0333-K1CHH2DXNF1-R007', 'PB228V0315-K1CHH21RNF1-R007'
+        ]}
+    }
+
+

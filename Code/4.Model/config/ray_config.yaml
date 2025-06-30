@@ -1,0 +1,43 @@
+# 示例 Ray 集群配置文件
+cluster_name: geneseeq_ray
+
+# 节点类型定义
+node_types:
+  head_node: # 头节点配置
+    resources: {"CPU": 10, "GPU": 0, "RAM": "8GB"} # 指定头节点资源
+#    node_config:
+#      ImageId: ami-12345678 # 例如，AWS AMI ID
+#      InstanceType: m5.large
+    min_workers: 0
+    max_workers: 0
+  worker_node: # 工作节点配置
+    resources: {"CPU": 10, "GPU": 0, "RAM": "40GB"} # 指定工作节点资源
+#    node_config:
+#      ImageId: ami-12345678 # 例如，AWS AMI ID
+#      InstanceType: m5.large
+    min_workers: 3
+    max_workers: 20
+
+## 指定提供者，这个例子是针对AWS
+#provider:
+#  type: aws
+#  region: us-west-2
+#  availability_zone: us-west-2a,us-west-2b
+
+# 指定集群设置
+cluster_synced_files: []
+file_mounts: {}
+initialization_commands: []
+setup_commands:
+  - pip install ray[all]
+
+# 指定头节点的设置
+head_node_type: head_node
+head_start_ray_commands:
+  - ray stop
+  - ulimit -n 65536; ray start --head --port=6379
+
+# 指定工作节点的设置
+worker_start_ray_commands:
+  - ray stop
+  - ulimit -n 65536; ray start --address=$RAY_HEAD_IP:6379

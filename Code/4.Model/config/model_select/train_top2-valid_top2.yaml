@@ -1,0 +1,25 @@
+## 示例
+# select_method:
+#     train_top2:
+#         file: AUC  这边写使用ModelStat生成的哪个文件 [AUC, AucSubGroup, CombineScore, Performance, PerformanceSubGroup]
+#         count: 2  这边写最后筛选的模型数量
+#         selected: {Group2: [Train]}  这边写筛选条件，对应pandas的语法。字典是列名，筛选条件.（df_a[df_a.Group2.isin([Train])]）
+#        target_value: AUC  这边写是根据哪一列去筛选。
+#        ascending: false 目标列是升序筛选还是降序筛选，
+
+
+select_method:
+
+    train_top2:
+        file: AUC
+        count: 2
+        selected: {Group2: [Train]}
+        target_value: AUC
+        ascending: false
+
+    valid_top2:
+        file: AUC
+        count: 2
+        selected: { Group2: [Valid]}
+        target_value: AUC
+        ascending: false

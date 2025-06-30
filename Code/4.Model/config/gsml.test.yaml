@@ -1,0 +1,331 @@
+ip: "10.1.2.53"
+port: 1112
+
+###############################################         数据集      #############################################
+dataset:
+  train:
+    info: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Train/Train.info.list
+    feature:
+      cnv: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Train/Train.cnv.csv
+      frag: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Train/Train.frag.scaleshortlongpeak1.csv
+  valid:
+    Valid1:
+      info: &valid1_info /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid1/Valid1.info.list
+      feature:
+        cnv: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid1/Valid1.cnv.csv
+        frag: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid1/Valid1.frag.scaleshortlongpeak1.csv
+    Valid2:
+      info: &valid2_info /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid2/Valid2.info.list
+      feature:
+          cnv: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid2/Valid2.cnv.csv
+          frag: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid2/Valid2.frag.scaleshortlongpeak1.csv
+
+features: &features
+  - cnv
+  - frag
+
+###############################################         模块默认参数      #############################################
+arg_automl: &arg_automl
+  nfolds: 5
+  stopping_metric: "aucpr"
+  sort_metric: "aucpr"
+  stopping_tolerance: 0.001
+  max_runtime_secs_per_model: 1800
+  weights_column: "Weight"
+
+arg_combine_score:
+  - {name: "Train AUC", mode: auc, Dataset: [Train], weight: 1}
+  - {name: "Valid1 AUC", mode: auc, Dataset: [Valid1], weight: 2}
+  - {name: "Valid1Partial", mode: acc, Dataset: [Valid1], Optimize: [Valid1_Partial], weight: 1}
+  - {name: "Valid2 AUC", mode: auc, Dataset: [Valid2], weight: 1}
+  - {name: "Valid1Sens", mode: sensitivity, Dataset: [Valid1], weight: 2}
+  - {name: "KAG9", mode: acc, Dataset: [Valid1], Optimize: [KAG9], weight: 1}
+  - {name: "KAG9_new", mode: acc, Dataset: [Valid1], Optimize: [KAG9_new], weight: 2}
+  - {name: "TimeComStab", mode: rep, Dataset: [Valid1], Optimize: [TubeTest_new], weight: 1}
+  - {name: "TubeTest", mode: rep, Dataset: [Valid1], Optimize: [TubeTest, TubeTest_NJ-BJ-GZ], weight: 1}
+  - {name: "TrainValidKs", mode: ks, Dataset: [Train, Valid1], weight: 1}  # 没有optimize参数
+  - {name: "RepSd", mode: sd, Dataset: [Valid1], Optimize: [KAG9, Rep69, TubeTest, TubeTest_NJ-BJ-GZ, INR30, TubeTest_new], weight: 1}
+
+
+###############################################         模型训练流程      #############################################
+pipeline:
+    AutoML_Raw:
+        base_model:
+            - {project_name: "amr_raw", module: "automl", max_models: 20, feature: *features, kwargs: *arg_automl}
+            - {project_name: "amr_cancer", module: "automl", max_models: 20, feature: *features, weight_file: "/dssg02/home/weiyl/projects/Mercury/20220408_Mercury_04_automl_basemodels_with_weight/Train.info.list.cancer.weight3", kwargs: *arg_automl}
+            - {project_name: "amr_disease", module: "automl", max_models: 20, feature: *features, weight_file: "/dssg02/home/weiyl/projects/Mercury/20220408_Mercury_04_automl_basemodels_with_weight/Train.info.list.disease.weight3", kwargs: *arg_automl}
+    AutoML_LeaderBoard:
+        base_model:
+            - {project_name: "aml_v1", module: "automl", max_models: 20, feature: *features, leaderboard_info: [*valid1_info], kwargs: *arg_automl}
+            - {project_name: "aml_v2", module: "automl", max_models: 20, feature: *features, leaderboard_info: [*valid2_info], kwargs: *arg_automl}
+            - {project_name: "aml_v1v2", module: "automl", max_models: 20, feature: *features, leaderboard_info: [*valid1_info, *valid2_info], kwargs: *arg_automl}
+            - {project_name: "aml_toronto", module: "automl", max_models: 20, feature: *features, leaderboard_info: ["/dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/Enhancer/Enhancer.toronto.info.list"], kwargs: *arg_automl}
+            - {project_name: "aml_hq", module: "automl", max_models: 20, feature: *features, leaderboard_info: ["/dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/Enhancer/Enhancer.hq.info.list"], kwargs: *arg_automl}
+###############################################         注意事项      #############################################
+## pipeline分析的所有命令，均保存在Log/FeatureSelect.msg文件下
+## 为方便后期重跑结果，文件路径尽量使用绝对路径
+## train和valid数据集中的特征名，必须一致。valid可以写入多个不同的数据集
+## 模型训练时，seed和algorithm_seed是同步修改的
+## 如果train_args提供多组参数，则模型训练时，会分别用不同的参数进行训练
+## 【模块参数】中的文件路径，都是d_database下的相对路径
+## 特征名称不能用下划线
+#
+###############################################         必调参数      #############################################
+#d_database: /dssg/home/sheny/MyProject/MercuryTools/database  # 数据库目录
+#train_seeds: [1, 2, 3, 4, 5]  # 每个模型需要几次重复
+#spec_list: [0.9, 0.95, 0.98]  # 模型性能统计的几个spec
+#step1_features: [cnv, frag, frag.arm, motif, motif.breakpoint]  # 需要进行step1过滤的特征
+#step1_repeat: 100  # step1 重复多少seed，获得特征权重均值结果
+#
+## 数据集
+#database:
+#  train:
+#    info: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Train/Train.info.list
+#    feature:
+#      cnv: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Train/Train.cnv.csv
+#      frag: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Train/Train.frag.scaleshortlongpeak1.csv
+#      frag.arm: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Train/Train.frag.arm.csv
+#      frag.arm.pca: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Train/Train.frag.arm.pca.csv
+#      combine2: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Train/Train.combine2.csv
+#      combine3: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Train/Train.combine3.csv
+#      motif.breakpoint: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Train/Train.motif.breakpoint.csv
+#      griffin: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Train/Train.griffin.csv
+#      neomer: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Train/Train.up.neomer.csv
+#      neomer2.0: /dssg/home/hep/Projects/Mercury/20220301-neomer-pncnc/model/pancancerXL202204/Train.up.neomer.csv
+#  valid:
+#    Valid1:
+#      info: &valid1_info /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid1/Valid1.info.list
+#      feature:
+#        cnv: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid1/Valid1.cnv.csv
+#        frag: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid1/Valid1.frag.scaleshortlongpeak1.csv
+#        frag.arm: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid1/Valid1.frag.arm.csv
+#        frag.arm.pca: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid1/Valid1.frag.arm.pca.csv
+#        combine2: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid1/Valid1.combine2.csv
+#        combine3: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid1/Valid1.combine3.csv
+#        motif.breakpoint: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid1/Valid1.motif.breakpoint.csv
+#        griffin: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid1/Valid1.griffin.csv
+#        neomer_4k: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid1/Valid1.up.neomer.csv
+#        neomer_40k: /dssg/home/hep/Projects/Mercury/20220301-neomer-pncnc/model/pancancerXL202204/Valid1.up.neomer.csv
+#    Valid2:
+#      info: &valid2_info /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid2/Valid2.info.list
+#      feature:
+#          cnv: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid2/Valid2.cnv.csv
+#          frag: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid2/Valid2.frag.scaleshortlongpeak1.csv
+#          frag.arm: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid2/Valid2.frag.arm.csv
+#          frag.arm.pca: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid2/Valid2.frag.arm.pca.csv
+#          combine2: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid2/Valid2.combine2.csv
+#          combine3: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid2/Valid2.combine3.csv
+#          motif.breakpoint: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid2/Valid2.motif.breakpoint.csv
+#          griffin: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid2/Valid2.griffin.csv
+#          neomer: /dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/test/Valid2/Valid2.up.neomer.csv
+#          neomer2.0: /dssg/home/hep/Projects/Mercury/20220301-neomer-pncnc/model/pancancerXL202204/Valid2.up.neomer.csv
+#
+## 模块开关
+#switch:
+#  raw_model_train: True  # 基于原始特征的模型训练
+##  step1_finale_db: False  # 过滤与finaleDB中趋势不一致的特征
+##  step1: False  # step1总开关
+##  step1_lm: True
+##  step1_lm_toronto: False
+##  step1_two_peak: True  # 双峰检测，过滤有双峰且与实验条件相关的特征。
+##  step1_stat: True  # 根据step1中，多个方法的统计结果，得到最终去除了实验条件影响的特征。
+##  step1_train_model: True  # 根据step1的筛选结果，训练模型
+##  step1_low_value: True  # 去除低值特征
+##  step1_ks: False  # Kolmogorov Smirnov分析模块
+##  step2: False
+##  combine_score: True  # 综合评价结果
+##  base_model_stacked: True
+#
+## 模型训练基本参数(seed参数值由train_repeat决定)
+#feature: &feature
+#  - cnv
+#  - frag
+#  - frag.arm
+#  - frag.arm.pca
+#  - combine2
+#  - combine3
+#  - motif.breakpoint
+#  - griffin
+#  - neomer
+#  - neomer2.0
+#
+#model_train_args:
+#  All:
+#    - {train_pipe: "default", ratio: 1, nthreads: 10, memory: 40G, addPCA: "FALSE", feature: *feature}
+#  RmGbm:
+#    - {train_pipe: "default", ratio: 1, nthreads: 10, memory: 40G, addPCA: "FALSE", feature: *feature,
+#       algorithms: "glm,rf,dl,xgboost"}
+#  AutoML_Raw:
+#    - {train_pipe: "automl", max_models: 20, feature: *feature}
+#    - {train_pipe: "automl", max_models: 20, feature: *feature, weight_file: "/dssg02/home/weiyl/projects/Mercury/20220408_Mercury_04_automl_basemodels_with_weight/Train.info.list.cancer.weight3"}
+#    - {train_pipe: "automl", max_models: 20, feature: *feature, weight_file: "/dssg02/home/weiyl/projects/Mercury/20220408_Mercury_04_automl_basemodels_with_weight/Train.info.list.disease.weight3"}
+#  AutoML_LeaderBoard:
+#    - {train_pipe: "automl", max_models: 20, feature: *feature, leaderboard_info: [*valid1_info]}
+#    - {train_pipe: "automl", max_models: 20, feature: *feature, leaderboard_info: [*valid2_info]}
+#    - {train_pipe: "automl", max_models: 20, feature: *feature, leaderboard_info: [*valid1_info, *valid2_info]}
+#    - {train_pipe: "automl", max_models: 20, feature: *feature, leaderboard_info: ["/dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/Enhancer/Enhancer.toronto.info.list"]}
+#    - {train_pipe: "automl", max_models: 20, feature: *feature, leaderboard_info: ["/dssg02/InternalResearch02/sheny/Mercury/2022-04-24_MercuryToolsTest/RawData/Enhancer/Enhancer.hq.info.list"]}
+#
+#
+#train_args_raw: &train_args_raw
+#  base:
+#    All:
+#      ratio: 1
+#      nthreads: 10
+#      memory: 40G
+#      addPCA: "FALSE"
+#    RmGbm:
+#      ratio: 1
+#      nthreads: 10
+#      memory: 50G
+#      addPCA: "FALSE"
+#      algorithms: "glm,rf,dl,xgboost"
+#  auto_ml:
+#    raw:
+#      max_models: "200"
+#    weight_cancer:
+#      max_models: "200"
+#      weight_file: "/dssg02/home/weiyl/projects/Mercury/20220408_Mercury_04_automl_basemodels_with_weight/Train.info.list.cancer.weight3"
+#    weight_disease:
+#      max_models: "200"
+#      weight_file: "/dssg02/home/weiyl/projects/Mercury/20220408_Mercury_04_automl_basemodels_with_weight/Train.info.list.disease.weight3"
+#
+#
+## step2 参数
+#step2_args:
+#  top100I:
+#    - {name: model_imp_intersect, args: {n: 100}}
+#  top200I:
+#    - {name: model_imp_intersect, args: {n: 200}}
+#  top10U:
+#    - {name: model_imp_union, args: {n: 10}}
+#  top20U:
+#    - {name: model_imp_union, args: {n: 20}}
+#  top30U:
+#    - {name: model_imp_union, args: {n: 30}}
+#  top40U:
+#    - {name: model_imp_union, args: {n: 40}}
+#  top50U:
+#    - {name: model_imp_union, args: {n: 50}}
+#  top50U_mrmr20:
+#    - {name: model_imp_union, args: {n: 50, mrmr: 20}}
+#  top50U_mrmr30:
+#    - {name: model_imp_union, args: {n: 50, mrmr: 30}}
+#  top50U_mrmr40:
+#    - {name: model_imp_union, args: {n: 50, mrmr: 40}}
+#  top50U_mrmr50:
+#    - {name: model_imp_union, args: {n: 50, mrmr: 50}}
+#
+## 最后，模型比较模块
+#model_compare:
+#  raw_step1: [raw, step1]
+#  top_intersect: [top100I, top200I]
+#  top_union: [top10U, top20U, top30U, top40U, top50U]
+#  top_mrmr: [top50U_mrmr20, top50U_mrmr30, top50U_mrmr40, top50U_mrmr50]
+#
+#
+###############################################         模块参数      #############################################
+#
+## finale db特征文件的路径，key值必须和train中特征的key值一致，才会进行相配对的过滤。路径是相对于database目录的路径
+#step1_finale_db:
+#  db_features:
+#    frag: FinaleDB/FinaleDB_fragment_total220.short_100-220.csv
+#    frag.arm: FinaleDB/FinaleDB_fragment_arm.5bp_100-220.csv
+#    motif: FinaleDB/FinalDB_motifend_100-220.csv
+#    motif.breakpoint: FinaleDB/FinalDB_motifbreakpoint_100-220.csv
+#  info_db: FinaleDB/FinaleDB640.info.list
+#
+## lm模块参数
+#step1_lm:
+#  lab_conditions: [Age, Train_Group, TubeType, Lib]
+#
+## two_peak模块
+#step1_two_peak:
+#  stat:
+#    f_two_peak_id_list: id.list.full.adjust
+#    peak_limit: 30
+#    two_class: "Sex,TubeType,Lib"
+#    continuous: "Age"
+#  compare:
+#    peak_limit: 30
+#    p_value: 0.01
+#  plot:
+#    list_cols: Age,Sex,Lib,TubeType
+#    base_group: Train_Group
+#    plot_level: [High, Middle]
+#
+## 低值过滤模块
+#step1_low_value:
+#  cutoff: 10
+#
+## ks模块
+#step1_ks:
+#  labs: [Project]  # 选择info文件中的一列或多列，作为分组比较的分组 [Project, Lib]
+#  alternative: "two-sided" # [two-sided, less, greater]
+#  mode: auto # [auto, exact, asymp]
+#  min_size: 10  # 当两组之间的非空样本数量小于该值，则ks统计量直接赋值为1（即高显著）
+#  metric: euclidean
+#  method: average  # [single, complete, average, weighted, centroid, ]
+#  criterion: inconsistent  # [inconsistent, distance, maxclust, monocrit, maxclust_monocrit]
+#  t: 0
+#  min_mean: 0.4
+#  min_var: 0.03
+#
+## base model select 模块
+#base_model_selected_args: &base_model_select_args
+#    valied1_auc_top3_mean:
+#        selected_method: [{columns: "Valid1 AUC", counts: 3}]
+#        score_method: "mean"
+#        spec: [0.9, 0.95, 0.98]
+#        exclude_feature: "motif.breakpoint"
+#    valied1_auc_top3_glm:
+#        selected_method: [{columns: "Valid1 AUC", counts: 3}]
+#        score_method: "glm"
+#        spec: [0.9, 0.95, 0.98]
+#        exclude_feature: "motif.breakpoint"
+#    train_valid1_auc_top2_mean:
+#        selected_method: [{columns: "Valid1 AUC", counts: 2}, {columns: "Train AUC", counts: 2}]
+#        score_method: "mean"
+#        spec: [0.9, 0.95, 0.98]
+#        exclude_feature: "motif.breakpoint"
+#    train_valid1_auc_top2_glm:
+#        selected_method: [{columns: "Valid1 AUC", counts: 2}, {columns: "Train AUC", counts: 2}]
+#        score_method: "glm"
+#        spec: [0.9, 0.95, 0.98]
+#        exclude_feature: "motif.breakpoint"
+#    combine_score_top3_mean:
+#        selected_method: [{columns: "CombineScore", counts: 3}]
+#        score_method: "mean"
+#        spec: [0.9, 0.95, 0.98]
+#        exclude_feature: "motif.breakpoint"
+#    combine_score_top3_glm:
+#        selected_method: [{columns: "CombineScore", counts: 3}]
+#        score_method: "glm"
+#        spec: [0.9, 0.95, 0.98]
+#        exclude_feature: "motif.breakpoint"
+#
+#
+#
+## 综合评价参数
+## 单列计算分多个模块（auc, acc, rep, ks, sd）
+## 对于auc，dataset参数中填入的名称，必须与上面一致
+## 优化项目，目前支持[KAG9, Rep69, Rep95, YM10, TubeTest], YM10实际有30例样本
+#combine_score:
+#  - {name: "Train AUC", mode: auc, Dataset: [cv], weight: 1}
+#  - {name: "Valid1 AUC", mode: auc, Dataset: [Valid1], weight: 2}
+#  - {name: "Valid1Partial", mode: acc, Optimize: [Valid1_Partial], weight: 1}
+#  - {name: "Valid2 AUC", mode: auc, Dataset: [Valid2], weight: 1}
+#  - {name: "Valid1Sens", mode: sensitivity, Dataset: [Valid1], weight: 2}
+#  - {name: "KAG9", mode: acc, Optimize: [KAG9], weight: 1}
+#  - {name: "KAG9_new", mode: acc, Optimize: [KAG9_new], weight: 2}
+#  - {name: "TimeComStab", mode: rep, Optimize: [TubeTest_new], weight: 1}
+#  - {name: "TubeTest", mode: rep, Optimize: [TubeTest, TubeTest_NJ-BJ-GZ], weight: 1}
+#  - {name: "TrainValidKs", mode: ks, Dataset: [cv, Valid1], weight: 1}  # 没有optimize参数
+#  - {name: "RepSd", mode: sd, Optimize: [KAG9, Rep69, TubeTest, TubeTest_NJ-BJ-GZ, INR30, TubeTest_new], weight: 1}
+#
+## 世和基因 base model 模型筛选参数
+#gs_stacked:
+#  - {Valid1_Auc_3: {database: ["Valid1"], metric: "auc", count: 3}}
+#  - {Valid1_Sens_95_3: {database: ["Valid1"], metric: "sensitivity", spec: 0.95, spec_tag: "cv", count: 3}}
+#  - {Cs_95_3: {target_list: "target_list", d_optimize: "d_optimize", spec: 0.95, spec_tag: "cv", metric: "combine_score", count: 3}}
+#

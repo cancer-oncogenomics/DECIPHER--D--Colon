@@ -1,0 +1,65 @@
+######################################################################################################
+# 注意事项
+# 1. 所有没有批次信息的样本的KitDate统一为1991-01-01
+######################################################################################################
+
+# PanCancer数据集 2022-08-09
+
+
+description:
+  K799: 复旦大学附属肿瘤医院/王征
+  KA7V: 中国医学科学院肿瘤医院/高树庚
+  KY249: 江苏省肿瘤医院/尹荣
+  Rep95: 肺癌旧实验流程，信灵采血管，5人，每人3个重复
+  KB48: 中国医科大学附属第一医院/许顺
+  KAL1: 长海医院/任善成
+  KY256: 中山大学附属肿瘤医院/王峰
+  KAG9_202106: 金陵队列老实验流程
+  KB4Q: 中国医学科学院肿瘤医院/苏建忠
+  KB53: 长癌医院/王林辉
+  KA5Q: 复旦大学附属肿瘤医院/彭俊杰
+  KAG9_202201: 金陵队列新湿实验流程
+  Y152: 旧实验流程，大部分人工，大部分EDTA采血管
+  Y00D: 旧实验流程，大部分自动化，大部分Streck采血管
+  Baseline-EDTA-Streck: EDTA，Streck采血管，用于采血管矫正基线样本
+  Rep69: 旧实验流程稳定性测试，8人*3rep
+  TubeTest_NJ-BJ-GZ: 采血管优化实验：10个健康人，Streck，Bunny新旧，Bunny成分18,19,20，不同运输时间，人工磁珠提取，KAPA自动化建库
+  Old_New_SOP_compare: 新老湿实验流程对比
+  Old_New_SOP_repeat: 新老湿实验流程重复性对比
+  KAG9_202205: KAG9新实验流程（人工提取）
+  R083: 江苏省肿瘤医院/尹荣
+  KAE3: 南京鼓楼医院肺癌/王立峰
+  PlosOne: "Ma X, Zhu L, Wu X, et al. PloS one, 2017, 12(1): e0169231."
+  KAT6: 广州医科大学附属第一医院/古迪
+  KY400:
+  KY387: 科研项目，非早筛实验流程Xten测序，PCR WGS数据
+  PRJNA578569: "Bujak A Z, Weng C F, Silva M J, et al. Annals of Oncology, 2019, 30: v30."
+  PRJNA633741: "Wei T, Zhang J, Li J, et al.Molecular oncology, 2020, 14(9): 1966-1977."
+  KAG9_202202: 金陵队列新实验流程
+  INR10: 尤明day0天采血，重复10次，老实验流程
+  INR20: 尤明day15天，30天采血，各重复10次，老实验流程
+  20210730_Tube_and_Save: 采血管优化实验：EDTA/Streck/Higia/Bunny， 常温/低温/高温运输
+  TimeComStab: 采血管优化实验： 5个健康人，EDTA，Streck，Bunny不同成分，不同空管放置时间，每个条件两个重复，人工磁珠提取，Qiagen自动化建库
+  YZ15_optimize: 磁珠提取STAR自动化测试实验（建库旧流程）：凯杰；磁珠人工；磁珠自动化批内批间
+  PRJNA795275: "Esfahani M S, Hamilton E G, Mehrmohamadi M, et al. Nature Biotechnology, 2022: 1-13."
+  S94U: 中国医学科学院肿瘤医院/苏建忠
+  Protease312: 血浆提取流程更换蛋白酶K 翎圣vs瀚海 优化实验，1肺癌样本*2
+  Protease421: 血浆提取流程更换蛋白酶K 翎圣vs瀚海 优化实验2，1肺癌样本*2
+  R007: 晚期肺癌，用于肺癌早筛文章补充验证
+  PRJNA627029: https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA627029
+  PRJNA489753: "Agarwal R, Chan Y C, Tam C S, et al. Nature Medicine, 2019, 25(1): 119-129."
+  PRJNA393138: "Cutts A, Venn O, Dilthey A, et al.NPJ genomic medicine, 2017, 2(1): 1-8."
+  PRJNA554329: "Ramesh N, Sei E, Tsai P C, et al. Genome biology, 2020, 21(1): 1-22."
+  Cleavage312: cfDNA磁珠法提取3次裂解vs2次裂解优化实验，3人*2rep
+  Cleavage419: cfDNA磁珠法提取裂解次数1次vs2次vs3次优化实验，5人*9rep
+  Protease313: 血浆提取流程更换蛋白酶K 翎圣vs瀚海 优化实验，3健康样本*2
+  CRC_HP_clinical_sample_test: 医疗器械临床CRC&HP样本测试，用于筛选阴阳性样本进行稀释
+  KAG9_new_sop: 新流程KAG9项目
+  KB6A_202207: KB6A7月份新下机样本
+
+
+dataset:
+  train:
+    select:
+        All:
+          - {KitDate: {"$lte": 2022-09-1T00:00:00+00:00, "$gte": 2022-08-1T00:00:00+00:00}}
